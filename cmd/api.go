@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/euandresimoes/visualdb-go.git/internal/infra/middlewares"
+	"github.com/euandresimoes/visualdb-go.git/internal/modules/columns"
 	"github.com/euandresimoes/visualdb-go.git/internal/modules/schemas"
 	"github.com/euandresimoes/visualdb-go.git/internal/modules/tables"
-	"github.com/euandresimoes/visualdb-go.git/internal/infra/middlewares"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -50,6 +51,12 @@ func (api *ApiConfig) Init() {
 	tablesService := tables.NewService(tablesRepository)
 	tablesHandler := tables.NewHandler(tablesService)
 	r.Mount("/tables", tablesHandler)
+
+	// Columns Routes
+	columnsRepository := columns.NewRepository(api.DBPool, api.DBType)
+	columnsService := columns.NewService(columnsRepository)
+	columnsHandler := columns.NewHandler(columnsService)
+	r.Mount("/columns", columnsHandler)
 
 	log.Printf("Listening on port %s\n", api.ApiPort)
 	http.ListenAndServe(api.ApiPort, r)

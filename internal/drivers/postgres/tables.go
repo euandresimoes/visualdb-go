@@ -35,6 +35,13 @@ func GetTables(db *pgxpool.Pool, schema string) (*models.ApiResponse, error) {
 		tables = append(tables, tableName)
 	}
 
+	if len(tables) == 0 {
+		return &models.ApiResponse{
+			Status:  http.StatusNoContent,
+			Message: "no tables found",
+		}, nil
+	}
+
 	if rows.Err() != nil {
 		return nil, rows.Err()
 	}
