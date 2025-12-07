@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/euandresimoes/visualdb-go.git/internal/domains/schemas"
-	"github.com/euandresimoes/visualdb-go.git/internal/domains/tables"
+	"github.com/euandresimoes/visualdb-go.git/internal/modules/schemas"
+	"github.com/euandresimoes/visualdb-go.git/internal/modules/tables"
 	"github.com/euandresimoes/visualdb-go.git/internal/infra/middlewares"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
