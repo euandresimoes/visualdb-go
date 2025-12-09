@@ -8,6 +8,7 @@ import (
 
 	"github.com/euandresimoes/visualdb-go.git/internal/infra/middlewares"
 	"github.com/euandresimoes/visualdb-go.git/internal/modules/columns"
+	"github.com/euandresimoes/visualdb-go.git/internal/modules/rows"
 	"github.com/euandresimoes/visualdb-go.git/internal/modules/schemas"
 	"github.com/euandresimoes/visualdb-go.git/internal/modules/tables"
 	"github.com/go-chi/chi/v5"
@@ -57,6 +58,12 @@ func (api *ApiConfig) Init() {
 	columnsService := columns.NewService(columnsRepository)
 	columnsHandler := columns.NewHandler(columnsService)
 	r.Mount("/columns", columnsHandler)
+
+	// Rows Routes
+	rowsRepository := rows.NewRepository(api.DBPool, api.DBType)
+	rowsService := rows.NewService(rowsRepository)
+	rowsHandler := rows.NewHandler(rowsService)
+	r.Mount("/rows", rowsHandler)
 
 	log.Printf("Listening on port %s\n", api.ApiPort)
 	http.ListenAndServe(api.ApiPort, r)

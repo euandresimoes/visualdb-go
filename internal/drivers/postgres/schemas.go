@@ -34,7 +34,7 @@ func GetSchemas(db *pgxpool.Pool) (*models.ApiResponse, error) {
 		schemasList = append(schemasList, schemaName)
 	}
 
-	if schemasList == nil || len(schemasList) == 0 {
+	if len(schemasList) == 0 {
 		return &models.ApiResponse{Status: http.StatusNoContent, Message: "no schemas found"}, nil
 	}
 

@@ -49,7 +49,7 @@ func GetColumns(db *pgxpool.Pool, schema string, table string) (*models.ApiRespo
 		})
 	}
 
-	if columnsList == nil || len(columnsList) == 0 {
+	if len(columnsList) == 0 {
 		return &models.ApiResponse{Status: http.StatusNoContent, Message: "no columns found"}, nil
 	}
 
