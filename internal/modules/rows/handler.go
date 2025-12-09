@@ -20,6 +20,7 @@ func NewHandler(service *Service) http.Handler {
 
 	r.Get("/", h.GetRows)
 	r.Post("/", h.InsertRow)
+	r.Delete("/", h.DeleteRow)
 
 	return r
 }
@@ -83,6 +84,26 @@ func (h *Handler) InsertRow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	row, err := h.Service.InsertRow(schema, table, bodyData)
+	if err != nil {
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(models.ApiResponse{
+			Status:  http.StatusConflict,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(row)
+}
+
+func (h *Handler) DeleteRow(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(r.URL.Query().Get("id"))
+	if !httpx.Require(w, id, "id") {
+		return
+	}
+
+	row, err := h.Service.DeleteRow(r.URL.Query().Get("schema"), r.URL.Query().Get("table"), id)
 	if err != nil {
 		w.WriteHeader(http.StatusConflict)
 		json.NewEncoder(w).Encode(models.ApiResponse{

@@ -70,3 +70,17 @@ func InsertRow(db *pgxpool.Pool, schema string, table string, row map[string]any
 		Data:    row,
 	}, nil
 }
+
+func DeleteRow(db *pgxpool.Pool, schema string, table string, id int) (*models.ApiResponse, error) {
+	query := fmt.Sprintf(`DELETE FROM "%s"."%s" WHERE id = $1`, schema, table)
+
+	_, err := db.Exec(context.Background(), query, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.ApiResponse{
+		Status:  http.StatusOK,
+		Message: "success",
+	}, nil
+}
