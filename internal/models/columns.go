@@ -5,4 +5,5 @@ type ColumnModel struct {
 	DataType      string  `json:"data_type"`
 	IsNullable    *string `json:"is_nullable"`
 	ColumnDefault *string `json:"column_default"`
+	IsPrimaryKey  bool    `json:"is_primary_key"`
 }

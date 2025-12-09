@@ -18,6 +18,6 @@ func (s *Service) InsertRow(schema string, table string, row map[string]any) (*m
 	return s.Repository.InsertRow(schema, table, row)
 }
 
-func (s *Service) DeleteRow(schema string, table string, id int) (*models.ApiResponse, error) {
-	return s.Repository.DeleteRow(schema, table, id)
+func (s *Service) DeleteRow(schema string, table string, pkColumn string, pkValue any) (*models.ApiResponse, error) {
+	return s.Repository.DeleteRow(schema, table, pkColumn, pkValue)
 }

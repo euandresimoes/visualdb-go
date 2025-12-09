@@ -71,10 +71,10 @@ func InsertRow(db *pgxpool.Pool, schema string, table string, row map[string]any
 	}, nil
 }
 
-func DeleteRow(db *pgxpool.Pool, schema string, table string, id int) (*models.ApiResponse, error) {
-	query := fmt.Sprintf(`DELETE FROM "%s"."%s" WHERE id = $1`, schema, table)
+func DeleteRow(db *pgxpool.Pool, schema string, table string, pkColumn string, pkValue any) (*models.ApiResponse, error) {
+	query := fmt.Sprintf(`DELETE FROM "%s"."%s" WHERE "%s" = $1`, schema, table, pkColumn)
 
-	_, err := db.Exec(context.Background(), query, id)
+	_, err := db.Exec(context.Background(), query, pkValue)
 	if err != nil {
 		return nil, err
 	}

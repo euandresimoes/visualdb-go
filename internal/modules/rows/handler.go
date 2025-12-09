@@ -98,12 +98,33 @@ func (h *Handler) InsertRow(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteRow(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.Atoi(r.URL.Query().Get("id"))
-	if !httpx.Require(w, id, "id") {
+	var (
+		schema = r.URL.Query().Get("schema")
+		table  = r.URL.Query().Get("table")
+	)
+	if !httpx.Require(w, schema, "schema") {
+		return
+	}
+	if !httpx.Require(w, table, "table") {
 		return
 	}
 
-	row, err := h.Service.DeleteRow(r.URL.Query().Get("schema"), r.URL.Query().Get("table"), id)
+	type Body struct {
+		PKColumn string `json:"pk_column"`
+		PKValue  any    `json:"pk_value"`
+	}
+
+	var bodyData Body
+	if err := json.NewDecoder(r.Body).Decode(&bodyData); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(models.ApiResponse{
+			Status:  http.StatusBadRequest,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	row, err := h.Service.DeleteRow(schema, table, bodyData.PKColumn, bodyData.PKValue)
 	if err != nil {
 		w.WriteHeader(http.StatusConflict)
 		json.NewEncoder(w).Encode(models.ApiResponse{
