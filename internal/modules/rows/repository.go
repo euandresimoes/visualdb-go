@@ -25,3 +25,12 @@ func (r *Repository) GetRows(schema string, table string, page int, limit int) (
 		return nil, errors.New("unsupported database type")
 	}
 }
+
+func (r *Repository) InsertRow(schema string, table string, row map[string]any) (*models.ApiResponse, error) {
+	switch r.DBType {
+	case "postgres":
+		return postgres.InsertRow(r.DB, schema, table, row)
+	default:
+		return nil, errors.New("unsupported database type")
+	}
+}

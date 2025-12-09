@@ -19,6 +19,7 @@ func NewHandler(service *Service) http.Handler {
 	r := chi.NewRouter()
 
 	r.Get("/", h.GetRows)
+	r.Post("/", h.InsertRow)
 
 	return r
 }
@@ -56,4 +57,41 @@ func (h *Handler) GetRows(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(rows)
+}
+
+func (h *Handler) InsertRow(w http.ResponseWriter, r *http.Request) {
+	var (
+		schema = r.URL.Query().Get("schema")
+		table  = r.URL.Query().Get("table")
+	)
+
+	if !httpx.Require(w, schema, "schema") {
+		return
+	}
+	if !httpx.Require(w, table, "table") {
+		return
+	}
+
+	var bodyData map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&bodyData); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(models.ApiResponse{
+			Status:  http.StatusBadRequest,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	row, err := h.Service.InsertRow(schema, table, bodyData)
+	if err != nil {
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(models.ApiResponse{
+			Status:  http.StatusConflict,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(row)
 }

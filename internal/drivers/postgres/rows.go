@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/euandresimoes/visualdb-go.git/internal/models"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -37,5 +38,35 @@ func GetRows(db *pgxpool.Pool, schema string, table string, page int, limit int)
 		Status:  http.StatusOK,
 		Message: "success",
 		Data:    rowsList,
+	}, nil
+}
+
+func InsertRow(db *pgxpool.Pool, schema string, table string, row map[string]any) (*models.ApiResponse, error) {
+	columns := make([]string, 0, len(row))
+	values := make([]any, 0, len(row))
+	placeholders := make([]string, 0, len(row))
+
+	i := 1
+	for col, val := range row {
+		columns = append(columns, fmt.Sprintf(`"%s"`, col))
+		values = append(values, val)
+		placeholders = append(placeholders, fmt.Sprintf("$%d", i))
+		i++
+	}
+
+	query := fmt.Sprintf(`
+		INSERT INTO "%s"."%s" (%s)
+		VALUES (%s)
+	`, schema, table, strings.Join(columns, ","), strings.Join(placeholders, ","))
+
+	_, err := db.Exec(context.Background(), query, values...)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.ApiResponse{
+		Status:  http.StatusOK,
+		Message: "success",
+		Data:    row,
 	}, nil
 }
