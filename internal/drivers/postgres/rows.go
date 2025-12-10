@@ -84,3 +84,33 @@ func DeleteRow(db *pgxpool.Pool, schema string, table string, pkColumn string, p
 		Message: "success",
 	}, nil
 }
+
+func UpdateRow(db *pgxpool.Pool, schema string, table string, pkColumn string, pkValue any, row map[string]any) (*models.ApiResponse, error) {
+	colsAndVals := make([]string, 0, len(row))
+
+	for col, val := range row {
+		switch val.(type) {
+		case string:
+			colsAndVals = append(colsAndVals, fmt.Sprintf(`%s = '%s'`, col, val))
+		default:
+			colsAndVals = append(colsAndVals, fmt.Sprintf(`%s = %v`, col, val))
+		}
+	}
+
+	query := fmt.Sprintf(`
+		UPDATE "%s"."%s"
+		SET %s
+		WHERE %s = %v
+	`, schema, table, strings.Join(colsAndVals, ","), pkColumn, pkValue)
+
+	_, err := db.Exec(context.Background(), query)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.ApiResponse{
+		Status:  http.StatusOK,
+		Message: "success",
+		Data:    row,
+	}, nil
+}

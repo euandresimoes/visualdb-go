@@ -43,3 +43,12 @@ func (r *Repository) DeleteRow(schema string, table string, pkColumn string, pkV
 		return nil, errors.New("unsupported database type")
 	}
 }
+
+func (r *Repository) UpdateRow(schema string, table string, pkColumn string, pkValue any, row map[string]any) (*models.ApiResponse, error) {
+	switch r.DBType {
+	case "postgres":
+		return postgres.UpdateRow(r.DB, schema, table, pkColumn, pkValue, row)
+	default:
+		return nil, errors.New("unsupported database type")
+	}
+}

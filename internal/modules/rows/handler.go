@@ -21,6 +21,7 @@ func NewHandler(service *Service) http.Handler {
 	r.Get("/", h.GetRows)
 	r.Post("/", h.InsertRow)
 	r.Delete("/", h.DeleteRow)
+	r.Patch("/", h.UpdateRow)
 
 	return r
 }
@@ -125,6 +126,48 @@ func (h *Handler) DeleteRow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	row, err := h.Service.DeleteRow(schema, table, bodyData.PKColumn, bodyData.PKValue)
+	if err != nil {
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(models.ApiResponse{
+			Status:  http.StatusConflict,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(row)
+}
+
+func (h *Handler) UpdateRow(w http.ResponseWriter, r *http.Request) {
+	var (
+		schema = r.URL.Query().Get("schema")
+		table  = r.URL.Query().Get("table")
+	)
+	if !httpx.Require(w, schema, "schema") {
+		return
+	}
+	if !httpx.Require(w, table, "table") {
+		return
+	}
+
+	type Body struct {
+		PKColumn string         `json:"pk_column"`
+		PKValue  any            `json:"pk_value"`
+		Data     map[string]any `json:"data"`
+	}
+
+	var bodyData Body
+	if err := json.NewDecoder(r.Body).Decode(&bodyData); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(models.ApiResponse{
+			Status:  http.StatusBadRequest,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	row, err := h.Service.UpdateRow(schema, table, bodyData.PKColumn, bodyData.PKValue, bodyData.Data)
 	if err != nil {
 		w.WriteHeader(http.StatusConflict)
 		json.NewEncoder(w).Encode(models.ApiResponse{
