@@ -1,30 +1,30 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import { ref } from "vue";
+import Header from "./components/Header.vue";
+import TableRows from "./components/TableRows.vue";
+
+let selectedSchema = ref<string>("None");
+let selectedTable = ref<string>("None");
+
+function handleSchemaChange(schema: string) {
+  selectedSchema.value = schema;
+}
+
+function handleTableChange(table: string) {
+  selectedTable.value = table;
+}
 </script>
 
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
+  <main class="w-full h-screen flex flex-col overflow-hidden">
+    <Header
+      @schema-change="handleSchemaChange"
+      @table-change="handleTableChange"
+    />
+    <div class="flex-1 overflow-y-auto">
+      <TableRows :schema="selectedSchema" :table="selectedTable" />
+    </div>
+  </main>
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
+<style scoped></style>
