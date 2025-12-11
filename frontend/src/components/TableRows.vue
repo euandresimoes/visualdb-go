@@ -28,7 +28,7 @@ let showEditModal = ref<boolean>(false);
 let selectedRowForEdit = ref<Record<string, any> | null>(null);
 let deleting = ref<boolean>(false);
 
-const limitOptions = [20, 40, 60, 80, 100];
+const limitOptions = [10, 20, 30, 40, 50];
 
 async function fetchColumns() {
   if (props.schema === "None" || props.table === "None") {
@@ -191,6 +191,10 @@ async function deleteSingleRow(row: Record<string, any>) {
   }
 }
 
+async function fetchData() {
+  await Promise.all([fetchColumns(), fetchRows()]);
+}
+
 async function deleteSelectedRows() {
   if (props.schema === "None" || props.table === "None") {
     return;
@@ -302,91 +306,93 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="w-full h-full">
+  <div class="w-full h-full flex flex-col">
+    <!-- Loading state -->
     <div v-if="loading" class="text-center py-10">
       <p>Carregando dados...</p>
     </div>
-    <div v-else-if="rows.length === 0" class="text-center py-10">
-      <p class="text-gray-500">
-        Selecione um schema e uma tabela para ver os dados
-      </p>
-    </div>
-    <div v-else class="h-full flex flex-col">
-      <!-- Controles de paginação e limit -->
-      <div class="flex flex-wrap justify-between items-center bg-white p-4">
-        <div class="flex items-center gap-4">
-          <button
-            @click="openCreateModal"
-            class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm font-medium"
-          >
-            + Criar Nova Row
-          </button>
-          <button
-            @click="deleteSelectedRows"
-            :disabled="selectedRows.size === 0 || deleting"
-            class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {{
-              deleting ? "Deletando..." : `🗑️ Deletar (${selectedRows.size})`
-            }}
-          </button>
-          <label class="text-sm font-medium text-gray-700"
-            >Itens por página:</label
-          >
-          <select
-            v-model="limit"
-            @change="onLimitChange"
-            class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option v-for="opt in limitOptions" :key="opt" :value="opt">
-              {{ opt }}
-            </option>
-          </select>
-        </div>
+    <!-- Main content (always shown) -->
+    <div class="flex-1 flex flex-col">
+      <!-- Pagination and controls -->
+      <div
+        class="flex flex-wrap justify-between items-center bg-white p-4 border-b"
+      >
         <div class="flex items-center gap-4">
           <button
             @click="previousPage"
-            :disabled="currentPage === 1"
-            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+            :disabled="currentPage <= 1 || loading"
+            class="px-3 py-1 border rounded disabled:opacity-50"
           >
             Anterior
           </button>
-          <span class="text-sm font-medium text-gray-700">
-            Página {{ currentPage }}
-          </span>
+          <span>Página {{ currentPage }}</span>
           <button
             @click="nextPage"
-            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium"
+            :disabled="rows.length < limit || loading"
+            class="px-3 py-1 border rounded disabled:opacity-50"
           >
-            Próxima
+            Próximo
+          </button>
+          <select
+            v-model="limit"
+            @change="onLimitChange"
+            class="border rounded px-2 py-1"
+            :disabled="loading"
+          >
+            <option
+              v-for="option in limitOptions"
+              :key="option"
+              :value="option"
+            >
+              {{ option }} por página
+            </option>
+          </select>
+        </div>
+        <div class="flex gap-2">
+          <button
+            v-if="selectedRows.size > 0"
+            @click="deleteSelectedRows"
+            class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+            :disabled="loading || deleting"
+          >
+            {{ deleting ? "Excluindo..." : `Excluir (${selectedRows.size})` }}
+          </button>
+          <button
+            @click="fetchData"
+            class="px-3 py-1 border rounded hover:bg-gray-100"
+            title="Atualizar dados"
+            :disabled="loading"
+          >
+            🔄
+          </button>
+          <button
+            @click="openCreateModal"
+            class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            + Nova Linha
           </button>
         </div>
       </div>
-
-      <!-- Tabela de dados -->
-      <div
-        class="flex-1 overflow-auto bg-white rounded-lg border border-gray-300"
-      >
+      <!-- Table container (always shown) -->
+      <div class="flex-1 overflow-auto">
         <table class="min-w-full">
           <thead class="bg-gray-100">
             <tr>
-              <!-- Checkbox para selecionar todos -->
               <th class="px-4 py-3 text-left border-b">
                 <input
                   ref="selectAllCheckbox"
                   type="checkbox"
                   :checked="isAllSelected()"
+                  :indeterminate="isIndeterminate()"
                   @change="toggleSelectAll"
                   class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
               </th>
-              <!-- Coluna de ações -->
               <th
                 class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-b"
               >
                 Ações
               </th>
-              <!-- Cabeçalhos das colunas com tipos -->
               <th
                 v-for="column in columns"
                 :key="column.column_name"
@@ -401,7 +407,10 @@ onMounted(() => {
               </th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
+          <tbody
+            v-if="rows.length > 0"
+            class="bg-white divide-y divide-gray-200"
+          >
             <tr
               v-for="(row, index) in rows"
               :key="index"
@@ -410,75 +419,81 @@ onMounted(() => {
                 isRowSelected(index) ? 'bg-blue-50' : '',
               ]"
             >
-              <!-- Checkbox da linha -->
-              <td class="px-4 py-4 whitespace-nowrap">
+              <td class="px-4 py-3 whitespace-nowrap border-b">
                 <input
                   type="checkbox"
                   :checked="isRowSelected(index)"
-                  @change="toggleRowSelection(index)"
+                  @change="() => toggleRowSelection(index)"
                   class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
               </td>
-              <!-- Ações da linha -->
-              <td class="px-4 py-4 whitespace-nowrap">
-                <div class="flex gap-2">
+              <td class="px-4 py-3 whitespace-nowrap border-b">
+                <div class="flex space-x-2">
                   <button
                     @click="openEditModal(row)"
-                    class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-xs font-medium"
+                    class="text-blue-600 hover:text-blue-800"
+                    title="Editar"
                   >
-                    Editar
+                    ✏️
                   </button>
                   <button
                     @click="deleteSingleRow(row)"
-                    class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-medium"
+                    class="text-red-600 hover:text-red-800"
+                    :disabled="deleting"
+                    title="Excluir"
                   >
-                    Deletar
+                    🗑️
                   </button>
                 </div>
               </td>
-              <!-- Dados da linha -->
               <td
                 v-for="column in columns"
                 :key="column.column_name"
-                class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"
+                class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-b"
               >
-                <span
-                  v-if="
-                    row[column.column_name] !== null &&
-                    row[column.column_name] !== undefined
-                  "
-                >
-                  {{ row[column.column_name] }}
-                </span>
-                <span v-else class="text-gray-400 italic">null</span>
+                {{
+                  row[column.column_name] !== null
+                    ? row[column.column_name]
+                    : "NULL"
+                }}
+              </td>
+            </tr>
+          </tbody>
+          <tbody v-else class="bg-white">
+            <tr>
+              <td
+                :colspan="columns.length + 2"
+                class="px-6 py-12 text-center text-gray-500"
+              >
+                Nenhum dado encontrado
               </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
-
-    <!-- Modal de Criação -->
+    <!-- Create Row Modal -->
     <CreateRowModal
       :show="showCreateModal"
       :columns="columns"
-      :schema="props.schema"
-      :table="props.table"
+      :schema="schema"
+      :table="table"
       @close="closeCreateModal"
       @created="handleRowCreated"
     />
-
-    <!-- Modal de Edição -->
+    <!-- Edit Row Modal -->
     <EditRowModal
+      v-if="selectedRowForEdit"
       :show="showEditModal"
       :columns="columns"
-      :schema="props.schema"
-      :table="props.table"
+      :schema="schema"
+      :table="table"
       :row="selectedRowForEdit"
       @close="closeEditModal"
       @updated="handleRowUpdated"
     />
   </div>
 </template>
-
-<style scoped></style>
+<style scoped>
+/* Add any custom styles here if needed */
+</style>
