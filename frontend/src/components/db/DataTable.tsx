@@ -55,51 +55,34 @@ interface DataTableProps {
 
 const LIMIT_OPTIONS = [10, 25, 50, 100, 200];
 
-const DATE_TYPES = [
-  "date",
-  "timestamp",
-  "timestamp with time zone",
-  "timestamp without time zone",
-  "timestamptz",
-  "time",
-  "time with time zone",
-  "time without time zone",
-  "timetz",
-];
-
-const isDateType = (dataType: string) =>
-  DATE_TYPES.some((t) => dataType.toLowerCase().includes(t));
-
 const getInputType = (dataType: string): string => {
   const lower = dataType.toLowerCase();
   if (lower === "date") return "date";
-  if (lower.includes("timestamp")) return "datetime-local";
-  if (lower.includes("time")) return "time";
+  if (lower.includes("timestamp") || lower.includes("datetime"))
+    return "datetime-local";
+  if (lower.includes("time") && !lower.includes("timestamp")) return "time";
   return "text";
 };
 
-const formatDateForInput = (value: unknown, inputType: string): string => {
-  if (value === null || value === undefined || value === "NULL") return "";
-  const strVal = String(value);
-  if (!strVal) return "";
-
-  try {
-    const date = new Date(strVal);
-    if (isNaN(date.getTime())) return strVal;
-
-    if (inputType === "date") {
-      return date.toISOString().split("T")[0];
-    }
-    if (inputType === "datetime-local") {
-      return date.toISOString().slice(0, 16);
-    }
-    if (inputType === "time") {
-      return date.toISOString().slice(11, 16);
-    }
-  } catch {
-    return strVal;
+const formatDateForInput = (value: unknown, dataType: string): string => {
+  if (!value) return "";
+  const date = new Date(value as string);
+  if (isNaN(date.getTime())) return String(value);
+  const lowerType = dataType.toLowerCase();
+  if (lowerType.includes("timestamp") || lowerType.includes("datetime")) {
+    // Return the time part as-is without timezone conversion
+    const pad = (num: number) => num.toString().padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+      date.getDate()
+    )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
-  return strVal;
+  if (lowerType === "date") {
+    return date.toISOString().split("T")[0];
+  }
+  if (lowerType === "time" && !lowerType.includes("timestamp")) {
+    return date.toTimeString().split(" ")[0];
+  }
+  return String(value);
 };
 
 export function DataTable({ schema, table }: DataTableProps) {
@@ -147,10 +130,8 @@ export function DataTable({ schema, table }: DataTableProps) {
   const handleSave = async () => {
     if (!editRow) return;
     const pk = getPrimaryKey();
-
     try {
       if (isNewRow) {
-        // Remove pk from new row if it has auto-increment
         const dataToSend = { ...editRow };
         if (pk?.column_default?.includes("nextval")) {
           delete dataToSend[pk.column_name];
@@ -167,10 +148,22 @@ export function DataTable({ schema, table }: DataTableProps) {
       setEditRow(null);
       setIsNewRow(false);
       loadData();
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Save error:", error);
+
+      let errorMessage = "An error occurred while saving the row";
+
+      try {
+        const errorResponse = await error.json();
+        errorMessage = errorResponse.message || errorMessage;
+      } catch (e) {
+        if (error.message) {
+          errorMessage = error.message;
+        }
+      }
       toast({
         title: "Error",
-        description: "Operation failed",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -251,7 +244,7 @@ export function DataTable({ schema, table }: DataTableProps) {
   const openNewRow = () => {
     const emptyRow: Record<string, unknown> = {};
     columns.forEach((col) => {
-      emptyRow[col.column_name] = col.column_default || "";
+      emptyRow[col.column_name] = "";
     });
     setEditRow(emptyRow);
     setIsNewRow(true);
@@ -293,7 +286,12 @@ export function DataTable({ schema, table }: DataTableProps) {
               Delete ({selectedRows.size})
             </Button>
           )}
-          <Button variant="default" size="sm" onClick={openNewRow} className="bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={openNewRow}
+            className="bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20"
+          >
             <Plus className="h-4 w-4 mr-1" />
             Add Row
           </Button>
@@ -485,8 +483,7 @@ export function DataTable({ schema, table }: DataTableProps) {
                 const isPk = col.is_primary_key;
                 const hasDefault = col.column_default?.includes("nextval");
                 const disabled = isPk && !isNewRow;
-                const isDate = isDateType(col.data_type);
-                const inputType = isDate ? getInputType(col.data_type) : "text";
+                const inputType = getInputType(col.data_type);
 
                 return (
                   <div key={col.column_name} className="space-y-1">
@@ -502,37 +499,43 @@ export function DataTable({ schema, table }: DataTableProps) {
                         </span>
                       )}
                     </label>
-                    {isDate ? (
-                      <input
-                        type={inputType}
-                        value={formatDateForInput(
-                          editRow[col.column_name],
-                          inputType
-                        )}
-                        onChange={(e) =>
+                    <Input
+                      type={inputType}
+                      value={formatDateForInput(
+                        editRow[col.column_name],
+                        col.data_type
+                      )}
+                      onChange={(e) => {
+                        let value = e.target.value;
+                        if (
+                          col.data_type.toLowerCase().includes("timestamp") &&
+                          value
+                        ) {
+                          // Keep the exact value without timezone conversion
                           setEditRow({
                             ...editRow,
-                            [col.column_name]: e.target.value || null,
-                          })
-                        }
-                        disabled={disabled || (isNewRow && hasDefault)}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      />
-                    ) : (
-                      <Input
-                        value={formatValue(editRow[col.column_name])}
-                        onChange={(e) =>
+                            [col.column_name]: value || null,
+                          });
+                        } else if (
+                          col.data_type.toLowerCase() === "date" &&
+                          value
+                        ) {
                           setEditRow({
                             ...editRow,
-                            [col.column_name]: e.target.value,
-                          })
+                            [col.column_name]: value || null,
+                          });
+                        } else {
+                          setEditRow({
+                            ...editRow,
+                            [col.column_name]: value || null,
+                          });
                         }
-                        disabled={disabled || (isNewRow && hasDefault)}
-                        placeholder={
-                          col.is_nullable === "YES" ? "NULL" : "Required"
-                        }
-                      />
-                    )}
+                      }}
+                      disabled={disabled || (isNewRow && hasDefault)}
+                      placeholder={
+                        col.is_nullable === "YES" ? "NULL" : "Required"
+                      }
+                    />
                   </div>
                 );
               })}
@@ -547,7 +550,12 @@ export function DataTable({ schema, table }: DataTableProps) {
             >
               Cancel
             </Button>
-            <Button onClick={handleSave} className="bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20">Save</Button>
+            <Button
+              onClick={handleSave}
+              className="bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20"
+            >
+              Save
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
