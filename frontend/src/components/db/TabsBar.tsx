@@ -64,14 +64,14 @@ export function TabsBar({
     dragOverTabId.current = null;
   };
   return (
-    <div className="h-10 border-b border-border bg-card/50 backdrop-blur-sm flex items-center">
+    <div className="h-10 border-b border-border backdrop-blur-sm flex items-center">
       <ScrollArea className="w-full">
         <div className="flex items-end h-10 px-1.5 gap-1.5">
           {tabs.map((tab) => (
             <div
               key={tab.id}
               className={cn(
-                "group flex items-center gap-2 h-8 px-3 border border-transparent border-b-0 rounded-sm rounded-b-none cursor-pointer transition-all text-sm font-medium",
+                "group flex items-center gap-2 h-8 px-3 border border-transparent border-b-0 rounded-sm rounded-b-none cursor-default active:cursor-grabbing transition-all text-sm font-medium",
                 "hover:bg-muted/50 border-border/60 tab-rounded",
                 activeTabId === tab.id
                   ? "bg-muted text-foreground border border-border border-b-0"
@@ -112,7 +112,7 @@ export function TabsBar({
                   e.stopPropagation();
                   onTabClose(tab.id);
                 }}
-                className="ml-1 p-1 rounded hover:bg-destructive/20 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                className="ml-1 p-1 rounded hover:bg-destructive/20 hover:text-destructive cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <X className="h-3 w-3" />
               </button>

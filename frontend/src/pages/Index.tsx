@@ -121,16 +121,13 @@ const Index = () => {
                   }
 
                   try {
-                    const response = await fetch(
-                      "http://localhost:7020/query",
-                      {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ query }),
-                      }
-                    );
+                    const response = await fetch("/api/query", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({ query }),
+                    });
 
                     const result = await response.json();
 
@@ -156,7 +153,20 @@ const Index = () => {
                 }}
               />
             ) : (
-              <DataTable schema={activeTab.schema} table={activeTab.table} />
+              <DataTable
+                key={`${activeTab.schema}-${activeTab.table}`}
+                schema={activeTab.schema}
+                table={activeTab.table}
+                onError={() => {
+                  // Remove a aba quando ocorre um erro
+                  setTabs((prev) =>
+                    prev.filter((tab) => tab.id !== activeTabId)
+                  );
+                  setActiveTabId((prev) =>
+                    prev === activeTabId ? null : prev
+                  );
+                }}
+              />
             )
           ) : (
             <div className="flex items-center justify-center h-full">

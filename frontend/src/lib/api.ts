@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:23806";
+const API_BASE = "/api";
 
 export interface Column {
   column_name: string;
@@ -145,5 +145,16 @@ export const api = {
       (error as any).status = res.status;
       throw error;
     }
+  },
+
+  exportToCSV(schema: string, table: string) {
+    const url = `${API_BASE}/rows/export?schema=${schema}&table=${table}`;
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = ""; // deixa o backend decidir o nome
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   },
 };

@@ -36,6 +36,7 @@ import {
   ChevronRight,
   RefreshCw,
   Key,
+  FileDown,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,7 @@ import {
 interface DataTableProps {
   schema: string;
   table: string;
+  onError?: () => void; // Callback para erros
 }
 
 const LIMIT_OPTIONS = [10, 25, 50, 100, 200];
@@ -85,7 +87,7 @@ const formatDateForInput = (value: unknown, dataType: string): string => {
   return String(value);
 };
 
-export function DataTable({ schema, table }: DataTableProps) {
+export function DataTable({ schema, table, onError }: DataTableProps) {
   const [columns, setColumns] = useState<Column[]>([]);
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [page, setPage] = useState(1);
@@ -112,14 +114,18 @@ export function DataTable({ schema, table }: DataTableProps) {
         api.getColumns(schema, table),
         api.getRows(schema, table, page, limit),
       ]);
-      setColumns(cols);
-      setRows(rowData);
+      setColumns(cols || []);
+      setRows(rowData || []);
     } catch (error) {
+      console.error(`Error loading table ${schema}.${table}:`, error);
       toast({
         title: "Error",
-        description: "Failed to load data",
+        description: `Table ${schema}.${table} not found or inaccessible`,
         variant: "destructive",
       });
+      if (onError) {
+        onError(); // Chama a função de erro para fechar a aba
+      }
     } finally {
       setLoading(false);
     }
@@ -164,6 +170,19 @@ export function DataTable({ schema, table }: DataTableProps) {
       toast({
         title: "Error",
         description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportToCSV = async () => {
+    try {
+      api.exportToCSV(schema, table);
+      toast({ title: "Success", description: "Table exported successfully" });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Export failed",
         variant: "destructive",
       });
     }
@@ -256,6 +275,11 @@ export function DataTable({ schema, table }: DataTableProps) {
     return String(value);
   };
 
+  // Se não houver colunas (ocorreu um erro), não renderiza nada
+  if (columns === null) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
@@ -267,6 +291,15 @@ export function DataTable({ schema, table }: DataTableProps) {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            title="Export to CSV"
+            onClick={handleExportToCSV}
+            disabled={loading}
+          >
+            <FileDown className={cn("h-4 w-4", loading && "animate-spin")} />
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -317,12 +350,12 @@ export function DataTable({ schema, table }: DataTableProps) {
                 <TableHead className="w-20 text-center">Actions</TableHead>
                 {columns.map((col) => (
                   <TableHead key={col.column_name} className="min-w-32">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       {col.is_primary_key && (
                         <Key className="h-3 w-3 text-primary" />
                       )}
                       <span>{col.column_name}</span>
-                      <span className="text-xs text-muted-foreground ml-1">
+                      <span className="text-[0.6rem] uppercase text-muted-foreground px-1 rounded bg-primary/5 text-primary/70 border border-primary/30">
                         {col.data_type}
                       </span>
                     </div>

@@ -124,7 +124,7 @@ export function QueryEditor({
       {/* Toolbar */}
       <div className="flex items-center justify-between p-3 border-b border-border bg-card/30">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">Query Editor</h2>
+          <h2 className="text-lg font-semibold">SQL Editor</h2>
         </div>
         <div className="flex items-center gap-2">
           <Button
