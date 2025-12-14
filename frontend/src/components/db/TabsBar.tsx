@@ -70,6 +70,7 @@ export function TabsBar({
           {tabs.map((tab) => (
             <div
               key={tab.id}
+              title="Double-click or middle-click to close"
               className={cn(
                 "group flex items-center gap-2 h-8 px-3 border border-transparent border-b-0 rounded-sm rounded-b-none cursor-default active:cursor-grabbing transition-all text-sm font-medium",
                 "hover:bg-muted/50 border-border/60 tab-rounded",

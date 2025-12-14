@@ -91,7 +91,7 @@ export function DataTable({ schema, table, onError }: DataTableProps) {
   const [columns, setColumns] = useState<Column[]>([]);
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(50);
+  const [limit, setLimit] = useState(25);
   const [loading, setLoading] = useState(true);
   const [editRow, setEditRow] = useState<Record<string, unknown> | null>(null);
   const [isNewRow, setIsNewRow] = useState(false);
@@ -106,6 +106,24 @@ export function DataTable({ schema, table, onError }: DataTableProps) {
   useEffect(() => {
     loadData();
     setSelectedRows(new Set());
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "ArrowLeft") {
+        e.preventDefault();
+        setPage((p) => Math.max(1, p - 1));
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === "ArrowRight") {
+        e.preventDefault();
+        setPage((p) => p + 1);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [schema, table, page, limit]);
 
   const loadData = async () => {
@@ -544,6 +562,7 @@ export function DataTable({ schema, table, onError }: DataTableProps) {
           <Button
             variant="outline"
             size="sm"
+            title="CTRL + Left Arrow"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
           >
@@ -552,6 +571,7 @@ export function DataTable({ schema, table, onError }: DataTableProps) {
           <Button
             variant="outline"
             size="sm"
+            title="CTRL + Right Arrow"
             onClick={() => setPage((p) => p + 1)}
             disabled={rows.length < limit}
           >

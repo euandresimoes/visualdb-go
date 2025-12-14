@@ -185,7 +185,7 @@ export function QueryEditor({
           extensions={[aura, sql()]}
           height="100%"
           theme="none"
-          placeholder="Enter your SQL query here..."
+          placeholder="Enter your SQL query here... (CTRL + Enter to Run)"
           className="w-full h-full text-[1rem] overflow-hidden"
           onKeyDown={(e) => {
             if (e.ctrlKey && e.key === "Enter") {
