@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { api, Column } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,6 +100,7 @@ export function DataTable({ schema, table, onError }: DataTableProps) {
   );
   const [selectedRows, setSelectedRows] = useState<Set<unknown>>(new Set());
   const [deletingSelected, setDeletingSelected] = useState(false);
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -239,7 +240,8 @@ export function DataTable({ schema, table, onError }: DataTableProps) {
     }
   };
 
-  const toggleSelectRow = (pkValue: unknown) => {
+  const toggleSelectRow = (pkValue: unknown, e: React.MouseEvent) => {
+    e.stopPropagation(); // Previne que o clique no checkbox expanda/retraia a linha
     const newSelected = new Set(selectedRows);
     if (newSelected.has(pkValue)) {
       newSelected.delete(pkValue);
@@ -247,6 +249,10 @@ export function DataTable({ schema, table, onError }: DataTableProps) {
       newSelected.add(pkValue);
     }
     setSelectedRows(newSelected);
+  };
+
+  const toggleExpandRow = (rowIndex: number) => {
+    setExpandedRow(expandedRow === rowIndex ? null : rowIndex);
   };
 
   const toggleSelectAll = () => {
@@ -349,13 +355,16 @@ export function DataTable({ schema, table, onError }: DataTableProps) {
                 </TableHead>
                 <TableHead className="w-20 text-center">Actions</TableHead>
                 {columns.map((col) => (
-                  <TableHead key={col.column_name} className="min-w-32">
+                  <TableHead
+                    key={col.column_name}
+                    className="min-w-32 max-w-[300px]"
+                  >
                     <div className="flex items-center gap-1.5">
                       {col.is_primary_key && (
-                        <Key className="h-3 w-3 text-primary" />
+                        <Key className="h-3 w-3 text-primary flex-shrink-0" />
                       )}
-                      <span>{col.column_name}</span>
-                      <span className="text-[0.6rem] uppercase text-muted-foreground px-1 rounded bg-primary/5 text-primary/70 border border-primary/30">
+                      <span className="truncate">{col.column_name}</span>
+                      <span className="text-[0.6rem] uppercase text-muted-foreground px-1 rounded bg-primary/5 text-primary/70 border border-primary/30 flex-shrink-0">
                         {col.data_type}
                       </span>
                     </div>
@@ -389,59 +398,111 @@ export function DataTable({ schema, table, onError }: DataTableProps) {
                   const isSelected = selectedRows.has(pkValue);
 
                   return (
-                    <TableRow
-                      key={idx}
-                      className={cn(
-                        "border-border hover:bg-muted/30",
-                        isSelected && "bg-primary/10"
-                      )}
-                    >
-                      <TableCell className="text-center">
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => toggleSelectRow(pkValue)}
-                          className="border-primary data-[state=checked]:bg-primary"
-                        />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => {
-                              setEditRow(row);
-                              setIsNewRow(false);
-                            }}
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-destructive hover:text-destructive"
-                            onClick={() => setDeleteRow(row)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                      {columns.map((col) => (
+                    <React.Fragment key={idx}>
+                      <TableRow
+                        className={cn(
+                          "border-border hover:bg-muted/30 cursor-pointer",
+                          isSelected && "bg-primary/10",
+                          expandedRow === idx && "bg-muted/20"
+                        )}
+                        onClick={() => toggleExpandRow(idx)}
+                      >
                         <TableCell
-                          key={col.column_name}
-                          className="font-mono text-sm"
+                          className="text-center max-w-[80px]"
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <span
-                            className={cn(
-                              row[col.column_name] === null &&
-                                "text-muted-foreground italic"
-                            )}
-                          >
-                            {formatValue(row[col.column_name])}
-                          </span>
+                          <div className="flex justify-center">
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => {
+                                const newSelected = new Set(selectedRows);
+                                const currentPkValue = pk
+                                  ? row[pk.column_name]
+                                  : idx;
+                                if (newSelected.has(currentPkValue)) {
+                                  newSelected.delete(currentPkValue);
+                                } else {
+                                  newSelected.add(currentPkValue);
+                                }
+                                setSelectedRows(newSelected);
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              className="border-primary data-[state=checked]:bg-primary"
+                            />
+                          </div>
                         </TableCell>
-                      ))}
-                    </TableRow>
+                        <TableCell className="text-center max-w-[100px]">
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditRow({ ...row });
+                                setIsNewRow(false);
+                              }}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteRow(row);
+                              }}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                        {columns.map((col) => (
+                          <TableCell
+                            key={col.column_name}
+                            className="text-sm max-w-[300px] overflow-hidden"
+                          >
+                            <div
+                              className="truncate"
+                              title={formatValue(row[col.column_name])}
+                            >
+                              {formatValue(row[col.column_name])}
+                            </div>
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                      {expandedRow === idx && (
+                        <TableRow className="bg-muted/10">
+                          <TableCell
+                            colSpan={columns.length + 2}
+                            className="p-0"
+                          >
+                            <div className="p-3 bg-background border-t border-border">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                {columns.map((col) => (
+                                  <div
+                                    key={col.column_name}
+                                    className="break-words max-w-[500px]"
+                                  >
+                                    <div className="text-xs font-medium text-muted-foreground mb-1">
+                                      {col.column_name}
+                                      <span className="ml-1 text-xs text-muted-foreground/70">
+                                        ({col.data_type})
+                                      </span>
+                                    </div>
+                                    <div className="text-sm break-all whitespace-pre-wrap max-w-[500px] overflow-x-auto">
+                                      {formatValue(row[col.column_name]) ||
+                                        "NULL"}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
                   );
                 })
               )}
