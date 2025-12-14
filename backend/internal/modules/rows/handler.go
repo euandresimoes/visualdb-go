@@ -2,8 +2,10 @@ package rows
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/euandresimoes/visualdb-go.git/internal/infra/httpx"
 	"github.com/euandresimoes/visualdb-go.git/internal/models"
@@ -18,6 +20,7 @@ func NewHandler(service *Service) http.Handler {
 	h := &Handler{Service: service}
 	r := chi.NewRouter()
 
+	r.Get("/export", h.ExportRowsToCSV)
 	r.Get("/", h.GetRows)
 	r.Post("/", h.InsertRow)
 	r.Delete("/", h.DeleteRow)
@@ -179,4 +182,49 @@ func (h *Handler) UpdateRow(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(row)
+}
+
+func (h *Handler) ExportRowsToCSV(w http.ResponseWriter, r *http.Request) {
+	var (
+		schema = r.URL.Query().Get("schema")
+		table  = r.URL.Query().Get("table")
+	)
+	if !httpx.Require(w, schema, "schema") {
+		return
+	}
+	if !httpx.Require(w, table, "table") {
+		return
+	}
+
+	now := time.Now()
+	ms := now.Nanosecond() / 1_000_000
+
+	date := fmt.Sprintf(
+		"export_%04d-%02d-%02dT%02d-%02d-%02d-%03d.csv",
+		now.Year(),
+		now.Month(),
+		now.Day(),
+		now.Hour(),
+		now.Minute(),
+		now.Second(),
+		ms,
+	)
+
+	ctx := r.Context()
+
+	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	w.Header().Set(
+		"Content-Disposition",
+		fmt.Sprintf(`attachment; filename="%s"`, date),
+	)
+
+	err := h.Service.ExportRowsToCSV(ctx, schema, table, w)
+	if err != nil {
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(models.ApiResponse{
+			Status:  http.StatusConflict,
+			Message: err.Error(),
+		})
+		return
+	}
 }

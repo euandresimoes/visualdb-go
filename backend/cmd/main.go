@@ -38,7 +38,7 @@ func main() {
 	}
 
 	api := &ApiConfig{
-		ApiPort: ":7020",
+		ApiPort: ":23806",
 		DBPool:  pool,
 		DBType:  envs["DB_TYPE"],
 	}
