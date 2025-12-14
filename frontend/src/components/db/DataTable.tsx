@@ -270,6 +270,7 @@ export function DataTable({ schema, table }: DataTableProps) {
           <Button
             variant="outline"
             size="sm"
+            title="Refresh"
             onClick={loadData}
             disabled={loading}
           >

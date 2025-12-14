@@ -92,6 +92,7 @@ const Index = () => {
             activeTabId={activeTabId}
             onTabSelect={setActiveTabId}
             onTabClose={closeTab}
+            onTabsReorder={setTabs}
           />
         )}
 

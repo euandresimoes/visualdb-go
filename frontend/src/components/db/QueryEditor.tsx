@@ -1,6 +1,14 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Copy, Trash2, CheckCircle2, XCircle } from "lucide-react";
+import {
+  Play,
+  Copy,
+  Trash2,
+  CheckCircle2,
+  XCircle,
+  Download,
+  FileUp,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CodeMirror from "@uiw/react-codemirror";
 import { sql } from "@codemirror/lang-sql";
@@ -26,6 +34,56 @@ export function QueryEditor({
   const handleCopy = () => {
     navigator.clipboard.writeText(query);
     toast({ title: "Copied", description: "Query copied to clipboard" });
+  };
+
+  const handleLoadQueryFile = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".sql";
+
+    input.onchange = async (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const text = await file.text();
+      query = text;
+      onQueryChange(query);
+    };
+
+    input.click();
+  };
+
+  const handleQuerySave = () => {
+    const blob = new Blob([query], { type: "text/plain" });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    let date = new Date();
+    const dateText =
+      date.getFullYear() +
+      "-" +
+      String(date.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(date.getDate()).padStart(2, "0") +
+      "T" +
+      String(date.getHours()).padStart(2, "0") +
+      "-" +
+      String(date.getMinutes()).padStart(2, "0") +
+      "-" +
+      String(date.getSeconds()).padStart(2, "0") +
+      "-" +
+      String(date.getMilliseconds()).padStart(3, "0");
+
+    link.href = url;
+    link.download = "query_" + dateText + ".sql";
+    link.textContent = "Download query";
+
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleRun = async () => {
@@ -69,15 +127,42 @@ export function QueryEditor({
           <h2 className="text-lg font-semibold">Query Editor</h2>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => onQueryChange("")}>
+          <Button
+            variant="outline"
+            size="sm"
+            title="Delete query"
+            onClick={() => onQueryChange("")}
+          >
             <Trash2 className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={handleCopy}>
+          <Button
+            variant="outline"
+            size="sm"
+            title="Copy query"
+            onClick={handleCopy}
+          >
             <Copy className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            title="Load query"
+            onClick={handleLoadQueryFile}
+          >
+            <FileUp className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            title="Save query"
+            onClick={handleQuerySave}
+          >
+            <Download className="h-4 w-4" />
           </Button>
           <Button
             variant="default"
             size="sm"
+            title="Run query"
             onClick={handleRun}
             disabled={isLoading}
             className="bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
