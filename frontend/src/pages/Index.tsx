@@ -172,7 +172,7 @@ const Index = () => {
             <div className="flex items-center justify-center h-full">
               <div className="text-center max-w-md">
                 <div className="w-32 h-32 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <img src="/public/logo.jpg" alt="Holo Studio Logo" />
+                  <img src="/logo.jpg" alt="Holo Studio Logo" />
                 </div>
                 <h2 className="text-xl font-semibold mb-2">
                   Welcome to Holo Studio
