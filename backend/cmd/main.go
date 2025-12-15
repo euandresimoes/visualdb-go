@@ -5,15 +5,9 @@ import (
 	"os"
 
 	"github.com/euandresimoes/visualdb-go.git/internal/infra/database"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error while loading envs %v\n", err)
-	}
-
 	envs := map[string]string{
 		"DB_TYPE":     os.Getenv("DB_TYPE"),
 		"DB_USER":     os.Getenv("DB_USER"),
@@ -21,6 +15,13 @@ func main() {
 		"DB_HOST":     os.Getenv("DB_HOST"),
 		"DB_PORT":     os.Getenv("DB_PORT"),
 		"DB_NAME":     os.Getenv("DB_NAME"),
+		"SSL_MODE":    os.Getenv("SSL_MODE"),
+	}
+
+	for key, val := range envs {
+		if val == "" {
+			log.Fatalf("Missing env: %s", key)
+		}
 	}
 
 	log.Printf("envs: %v\n", envs)
@@ -32,6 +33,7 @@ func main() {
 		Host:     envs["DB_HOST"],
 		Port:     envs["DB_PORT"],
 		Db:       envs["DB_NAME"],
+		SSLMode:  envs["SSL_MODE"],
 	})
 	if err != nil {
 		log.Fatalf("Error while creating connection pool %v\n", err)

@@ -171,23 +171,11 @@ const Index = () => {
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center max-w-md">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <svg
-                    className="w-8 h-8 text-primary"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
-                    />
-                  </svg>
+                <div className="w-32 h-32 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <img src="/public/logo.jpg" alt="Holo Studio Logo" />
                 </div>
                 <h2 className="text-xl font-semibold mb-2">
-                  Welcome to DBManager
+                  Welcome to Holo Studio
                 </h2>
                 <p className="text-muted-foreground text-sm">
                   Select a table from the sidebar to view and edit data, or

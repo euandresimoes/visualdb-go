@@ -172,13 +172,11 @@ export function AppSidebar({
         }}
       />
       {/* Header */}
-      <div className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-2">
-          <Database className="h-5 w-5 text-primary" />
-          <span className="font-semibold text-sidebar-foreground">
-            DBManager
-          </span>
-        </div>
+      <div className="px-2 py-1 border-b border-sidebar-border flex items-center">
+        <img src="public/logo.jpg" alt="" className="h-14 w-14 mr-1" />
+        <span className="font-bold text-[1.05rem] text-sidebar-foreground">
+          Holo Studio
+        </span>
       </div>
 
       {/* New Query Button */}

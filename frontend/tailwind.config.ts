@@ -19,50 +19,61 @@ export default {
     },
     extend: {
       colors: {
-        border: "hsl(240 8% 20%)",
-        input: "hsl(240 8% 16%)",
-        ring: "hsla(155, 81%, 42%, 1.00)",
-        background: "hsl(240 10% 8%)",
+        // superfícies neutras (quase cinza, pouquíssimo teal)
+        border: "hsl(210 6% 14%)",
+        input: "hsl(210 6% 12%)",
+        muted: {
+          DEFAULT: "hsl(210 6% 4%)",
+          foreground: "hsl(210 5% 65%)",
+        },
+
+        background: "hsl(168 71% 0%)",
         foreground: "hsl(0 0% 95%)",
+
+        ring: "hsl(155 81% 42%)",
+
         primary: {
-          DEFAULT: "hsla(155, 81%, 42%, 1.00)",
+          DEFAULT: "hsl(155 81% 42%)",
           foreground: "hsl(0 0% 100%)",
         },
+
         secondary: {
-          DEFAULT: "hsl(240 8% 14%)",
+          DEFAULT: "hsl(210 6% 10%)",
           foreground: "hsl(0 0% 90%)",
         },
+
         destructive: {
           DEFAULT: "hsl(0 70% 55%)",
           foreground: "hsl(0 0% 100%)",
         },
-        muted: {
-          DEFAULT: "hsl(240 8% 12%)",
-          foreground: "hsl(240 5% 65%)",
-        },
+
         accent: {
-          DEFAULT: "hsl(240 8% 16%)",
+          DEFAULT: "hsl(210 6% 12%)",
           foreground: "hsl(0 0% 95%)",
         },
+
         popover: {
-          DEFAULT: "hsl(240 10% 10%)",
+          DEFAULT: "hsl(210 6% 6%)",
           foreground: "hsl(0 0% 95%)",
         },
+
         card: {
-          DEFAULT: "hsl(240 8% 12%)",
+          DEFAULT: "hsl(210 6% 7%)",
           foreground: "hsl(0 0% 95%)",
         },
+
         sidebar: {
-          DEFAULT: "hsl(240 10% 8%)",
-          foreground: "hsl(0 0% 85%)",
-          primary: "hsla(155, 81%, 42%, 1.00)",
+          DEFAULT: "hsl(168 71% 0%)",
+          foreground: "hsl(210 6% 85%)",
+          primary: "hsl(155 81% 42%)",
           "primary-foreground": "hsl(0 0% 100%)",
-          accent: "hsl(240 8% 16%)",
+          accent: "hsl(210 6% 11%)",
           "accent-foreground": "hsl(0 0% 95%)",
-          border: "hsl(240 8% 16%)",
-          ring: "hsla(155, 81%, 42%, 1.00)",
+          border: "hsl(210 6% 13%)",
+          ring: "hsl(155 81% 42%)",
         },
       },
+
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/euandresimoes/visualdb-go.git/internal/infra/middlewares"
@@ -42,9 +45,7 @@ func (api *ApiConfig) Init() {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	// My Middlewares
-	r.Use(middlewares.ContentType)
-
+	// Health check
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]any{
@@ -53,38 +54,62 @@ func (api *ApiConfig) Init() {
 		})
 	})
 
-	// Schemas Routes
-	schemasRepository := schemas.NewRepository(api.DBPool, api.DBType)
-	schemasService := schemas.NewService(schemasRepository)
-	schemasHandler := schemas.NewHandler(schemasService)
-	r.Mount("/schemas", schemasHandler)
+	// API Routes
+	r.Route("/api", func(r chi.Router) {
+		r.Use(middlewares.ContentType)
 
-	// Tables Routes
-	tablesRepository := tables.NewRepository(api.DBPool, api.DBType)
-	tablesService := tables.NewService(tablesRepository)
-	tablesHandler := tables.NewHandler(tablesService)
-	r.Mount("/tables", tablesHandler)
+		schemasRepository := schemas.NewRepository(api.DBPool, api.DBType)
+		schemasService := schemas.NewService(schemasRepository)
+		schemasHandler := schemas.NewHandler(schemasService)
+		r.Mount("/schemas", schemasHandler)
 
-	// Columns Routes
-	columnsRepository := columns.NewRepository(api.DBPool, api.DBType)
-	columnsService := columns.NewService(columnsRepository)
-	columnsHandler := columns.NewHandler(columnsService)
-	r.Mount("/columns", columnsHandler)
+		tablesRepository := tables.NewRepository(api.DBPool, api.DBType)
+		tablesService := tables.NewService(tablesRepository)
+		tablesHandler := tables.NewHandler(tablesService)
+		r.Mount("/tables", tablesHandler)
 
-	// Rows Routes
-	rowsRepository := rows.NewRepository(api.DBPool, api.DBType)
-	rowsService := rows.NewService(rowsRepository)
-	rowsHandler := rows.NewHandler(rowsService)
-	r.Mount("/rows", rowsHandler)
+		columnsRepository := columns.NewRepository(api.DBPool, api.DBType)
+		columnsService := columns.NewService(columnsRepository)
+		columnsHandler := columns.NewHandler(columnsService)
+		r.Mount("/columns", columnsHandler)
 
-	// Query Routes
-	queryRepository := query.NewRepository(api.DBPool, api.DBType)
-	queryService := query.NewService(queryRepository)
-	queryHandler := query.NewHandler(queryService)
-	r.Mount("/query", queryHandler)
+		rowsRepository := rows.NewRepository(api.DBPool, api.DBType)
+		rowsService := rows.NewService(rowsRepository)
+		rowsHandler := rows.NewHandler(rowsService)
+		r.Mount("/rows", rowsHandler)
+
+		queryRepository := query.NewRepository(api.DBPool, api.DBType)
+		queryService := query.NewService(queryRepository)
+		queryHandler := query.NewHandler(queryService)
+		r.Mount("/query", queryHandler)
+	})
+
+	// Frontend - SPA
+	frontendDir := "/app/frontend/dist"
+	workDir, _ := os.Getwd()
+	filesDir := http.Dir(filepath.Join(workDir, frontendDir))
+
+	FileServer(r, "/", filesDir)
 
 	log.Printf("Listening on port %s\n", api.ApiPort)
 	http.ListenAndServe(api.ApiPort, r)
+}
+
+// FileServer conveniently sets up a http.FileServer handler to serve
+// static files from a http.FileSystem.
+func FileServer(r chi.Router, path string, root http.FileSystem) {
+	if path != "/" && path[len(path)-1] != '/' {
+		r.Get(path, http.RedirectHandler(path+"/", http.StatusMovedPermanently).ServeHTTP)
+		path += "/"
+	}
+	path += "*"
+
+	r.Get(path, func(w http.ResponseWriter, req *http.Request) {
+		rctx := chi.RouteContext(req.Context())
+		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
+		fs := http.StripPrefix(pathPrefix, http.FileServer(root))
+		fs.ServeHTTP(w, req)
+	})
 }
 
 type ApiConfig struct {
