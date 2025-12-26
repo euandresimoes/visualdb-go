@@ -45,40 +45,42 @@ func (api *ApiConfig) Init() {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	// Health check
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]any{
-			"status":  http.StatusOK,
-			"message": "pong",
-		})
-	})
-
 	// API Routes
 	r.Route("/api", func(r chi.Router) {
 		r.Use(middlewares.ContentType)
 
-		schemasRepository := schemas.NewRepository(api.DBPool, api.DBType)
+		// Health check
+		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]any{
+				"status":  http.StatusOK,
+				"message": "pong",
+				"version": api.Version,
+				"data":    api.DBConfig,
+			})
+		})
+
+		schemasRepository := schemas.NewRepository(api.DBPool, api.DBConfig.DBType)
 		schemasService := schemas.NewService(schemasRepository)
 		schemasHandler := schemas.NewHandler(schemasService)
 		r.Mount("/schemas", schemasHandler)
 
-		tablesRepository := tables.NewRepository(api.DBPool, api.DBType)
+		tablesRepository := tables.NewRepository(api.DBPool, api.DBConfig.DBType)
 		tablesService := tables.NewService(tablesRepository)
 		tablesHandler := tables.NewHandler(tablesService)
 		r.Mount("/tables", tablesHandler)
 
-		columnsRepository := columns.NewRepository(api.DBPool, api.DBType)
+		columnsRepository := columns.NewRepository(api.DBPool, api.DBConfig.DBType)
 		columnsService := columns.NewService(columnsRepository)
 		columnsHandler := columns.NewHandler(columnsService)
 		r.Mount("/columns", columnsHandler)
 
-		rowsRepository := rows.NewRepository(api.DBPool, api.DBType)
+		rowsRepository := rows.NewRepository(api.DBPool, api.DBConfig.DBType)
 		rowsService := rows.NewService(rowsRepository)
 		rowsHandler := rows.NewHandler(rowsService)
 		r.Mount("/rows", rowsHandler)
 
-		queryRepository := query.NewRepository(api.DBPool, api.DBType)
+		queryRepository := query.NewRepository(api.DBPool, api.DBConfig.DBType)
 		queryService := query.NewService(queryRepository)
 		queryHandler := query.NewHandler(queryService)
 		r.Mount("/query", queryHandler)
@@ -113,7 +115,16 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 }
 
 type ApiConfig struct {
-	ApiPort string
-	DBPool  *pgxpool.Pool
-	DBType  string
+	Version  string
+	ApiPort  string
+	DBPool   *pgxpool.Pool
+	DBConfig *DBConfig
+}
+
+type DBConfig struct {
+	DBHost string
+	DBPort string
+	DBType string
+	DBName string
+	DBUser string
 }
