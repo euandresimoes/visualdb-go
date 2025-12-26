@@ -40,9 +40,16 @@ func main() {
 	}
 
 	api := &ApiConfig{
+		Version: "v2.0",
 		ApiPort: ":23806",
 		DBPool:  pool,
-		DBType:  envs["DB_TYPE"],
+		DBConfig: &DBConfig{
+			DBHost: envs["DB_HOST"],
+			DBPort: envs["DB_PORT"],
+			DBType: envs["DB_TYPE"],
+			DBName: envs["DB_NAME"],
+			DBUser: envs["DB_USER"],
+		},
 	}
 
 	api.Init()

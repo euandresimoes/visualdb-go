@@ -19,58 +19,66 @@ export default {
     },
     extend: {
       colors: {
-        // superfícies neutras (quase cinza, pouquíssimo teal)
-        border: "hsl(210 6% 14%)",
-        input: "hsl(210 6% 12%)",
+        /* ---------- BASE DARK NEUTRO ---------- */
+        background: "#0F0F0F",
+        foreground: "hsl(210 6% 88%)",
+
+        border: "hsl(210 4% 17%)",
+        input: "hsl(210 4% 15%)",
+
         muted: {
-          DEFAULT: "hsl(210 6% 4%)",
-          foreground: "hsl(210 5% 65%)",
+          DEFAULT: "hsl(210 4% 13%)",
+          foreground: "hsl(210 5% 55%)",
         },
 
-        background: "hsl(168 71% 0%)",
-        foreground: "hsl(0 0% 95%)",
+        ring: "hsl(155 40% 42%)",
 
-        ring: "hsl(155 81% 42%)",
+        /* ---------- MAIN VIEW (MAIS CONTRASTE) ---------- */
+        primaryView: {
+          DEFAULT: "#121212",
+        },
 
+        /* ---------- BRAND (MENOS VERDE) ---------- */
         primary: {
-          DEFAULT: "hsl(155 81% 42%)",
+          DEFAULT: "hsl(155 40% 45%)",
           foreground: "hsl(0 0% 100%)",
         },
 
         secondary: {
-          DEFAULT: "hsl(210 6% 10%)",
-          foreground: "hsl(0 0% 90%)",
+          DEFAULT: "hsl(210 4% 14%)",
+          foreground: "hsl(210 6% 85%)",
         },
 
         destructive: {
-          DEFAULT: "hsl(0 70% 55%)",
+          DEFAULT: "hsl(0 55% 50%)",
           foreground: "hsl(0 0% 100%)",
         },
 
         accent: {
-          DEFAULT: "hsl(210 6% 12%)",
-          foreground: "hsl(0 0% 95%)",
+          DEFAULT: "hsl(210 4% 16%)",
+          foreground: "hsl(210 6% 88%)",
         },
 
         popover: {
-          DEFAULT: "hsl(210 6% 6%)",
-          foreground: "hsl(0 0% 95%)",
+          DEFAULT: "hsl(210 4% 14%)",
+          foreground: "hsl(210 6% 88%)",
         },
 
         card: {
-          DEFAULT: "hsl(210 6% 7%)",
-          foreground: "hsl(0 0% 95%)",
+          DEFAULT: "hsl(210 4% 15%)",
+          foreground: "hsl(210 6% 88%)",
         },
 
+        /* ---------- SIDEBAR = BACKGROUND ---------- */
         sidebar: {
-          DEFAULT: "hsl(168 71% 0%)",
-          foreground: "hsl(210 6% 85%)",
-          primary: "hsl(155 81% 42%)",
+          DEFAULT: "#0F0F0F",
+          foreground: "hsl(210 6% 78%)",
+          primary: "hsl(155 40% 45%)",
           "primary-foreground": "hsl(0 0% 100%)",
-          accent: "hsl(210 6% 11%)",
-          "accent-foreground": "hsl(0 0% 95%)",
-          border: "hsl(210 6% 13%)",
-          ring: "hsl(155 81% 42%)",
+          accent: "hsl(210 4% 14%)",
+          "accent-foreground": "hsl(210 6% 88%)",
+          border: "hsl(210 4% 17%)",
+          ring: "hsl(155 40% 45%)",
         },
       },
 
@@ -106,7 +114,7 @@ export default {
         xs: "0 1px 3px 0 rgb(0 0 0 / 0.4)",
         sm: "0 2px 6px -1px rgb(0 0 0 / 0.4)",
         md: "0 4px 12px -2px rgb(0 0 0 / 0.5)",
-        lg: "0 8px 24px -4px rgb(0 0 0 / 0.5)",
+        lg: "0 0 10px 0px rgb(0 0 0 / 0.8)",
         xl: "0 16px 48px -8px rgb(0 0 0 / 0.6)",
         "2xl": "0 24px 64px -12px rgb(0 0 0 / 0.7)",
       },

@@ -1,0 +1,29 @@
+services:
+  pg:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=pguser
+      - POSTGRES_PASSWORD=pgpwd
+      - POSTGRES_DB=pgdb
+    ports:
+      - 5432:5432
+    shm_size: 128mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pguser -d pgdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: golang:1.25.3
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    command: go run ./cmd
+    env_file:
+      - ./backend/.env
+    ports:
+      - "23806:23806"
+    depends_on:
+      pg:
+        condition: service_healthy

@@ -122,7 +122,7 @@ export function QueryEditor({
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex items-center justify-between p-3 border-b border-border bg-card/30">
+      <div className="flex items-center justify-between p-3 border-b border-border bg-primaryView">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold">SQL Editor</h2>
         </div>
@@ -197,7 +197,7 @@ export function QueryEditor({
       </div>
 
       {/* Results Area */}
-      <div className="border-t border-border bg-card/30 p-4 flex-1 overflow-auto">
+      <div className="border-t border-border bg-primaryView rounded-b-2xl p-4 flex-1 overflow-auto">
         {result ? (
           <div className="space-y-4">
             <div className="flex items-center gap-2">

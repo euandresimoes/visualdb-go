@@ -299,7 +299,6 @@ export function DataTable({ schema, table, onError }: DataTableProps) {
     return String(value);
   };
 
-  // Se não houver colunas (ocorreu um erro), não renderiza nada
   if (columns === null) {
     return null;
   }
@@ -307,7 +306,7 @@ export function DataTable({ schema, table, onError }: DataTableProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex items-center justify-between p-3 border-b border-border bg-card/30">
+      <div className="flex items-center justify-between p-3 border-b border-border bg-primaryView">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold">{table}</h2>
           <span className="text-xs text-muted-foreground px-2 py-0.5 rounded bg-muted/50">
@@ -531,7 +530,7 @@ export function DataTable({ schema, table, onError }: DataTableProps) {
       </ScrollArea>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between p-3 border-t border-border bg-card/30">
+      <div className="flex items-center justify-between px-3 py-1.5 border-t rounded-b-2xl border-border bg-primaryView">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Limit:</span>
@@ -545,7 +544,7 @@ export function DataTable({ schema, table, onError }: DataTableProps) {
               <SelectTrigger className="w-20 h-8">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-primaryView">
                 {LIMIT_OPTIONS.map((opt) => (
                   <SelectItem key={opt} value={String(opt)}>
                     {opt}
