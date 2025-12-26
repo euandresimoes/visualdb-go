@@ -84,7 +84,7 @@ const Index = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 m-5 border border-border rounded-lg flex flex-col min-w-0">
         {/* Tabs Bar */}
         {tabs.length > 0 && (
           <TabsBar
