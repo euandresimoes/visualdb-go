@@ -3,6 +3,7 @@ import { TabItem } from "@/types";
 import { cn } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useState, useRef } from "react";
+import { Button } from "../ui/button";
 
 interface TabsBarProps {
   tabs: TabItem[];
@@ -10,6 +11,7 @@ interface TabsBarProps {
   onTabSelect: (id: string) => void;
   onTabClose: (id: string) => void;
   onTabsReorder?: (tabs: TabItem[]) => void;
+  onOpenQueryEditor: () => void;
 }
 
 export function TabsBar({
@@ -18,6 +20,7 @@ export function TabsBar({
   onTabSelect,
   onTabClose,
   onTabsReorder,
+  onOpenQueryEditor,
 }: TabsBarProps) {
   const [draggedTabId, setDraggedTabId] = useState<string | null>(null);
   const dragOverTabId = useRef<string | null>(null);
@@ -64,18 +67,18 @@ export function TabsBar({
     dragOverTabId.current = null;
   };
   return (
-    <div className="h-10 border-b border-border backdrop-blur-sm flex items-center">
+    <div className="h-12 border-b border-border flex items-center">
       <ScrollArea className="w-full">
-        <div className="flex items-end h-10 px-1.5 gap-1.5">
+        <div className="flex items-end h-10 px-3 py-1 gap-1.5">
           {tabs.map((tab) => (
             <div
               key={tab.id}
               title="Double-click or middle-click to close"
               className={cn(
-                "group flex items-center gap-2 h-8 px-3 border border-transparent border-b-0 rounded-sm rounded-b-none cursor-default active:cursor-grabbing transition-all text-sm font-medium",
-                "hover:bg-muted/50 border-border/60 tab-rounded",
+                "group flex items-center gap-2 h-full px-3 border border-transparent bg-primaryView rounded-sm cursor-default active:cursor-grabbing transition-all text-sm font-medium",
+                "hover:bg-muted/40 border-border/60 tab-rounded",
                 activeTabId === tab.id
-                  ? "bg-muted text-foreground border border-border border-b-0"
+                  ? "bg-primaryView text-foreground border border-border"
                   : "text-muted-foreground border-border/30",
                 draggedTabId === tab.id ? "opacity-50" : "",
                 dragOverTabId.current === tab.id
@@ -119,7 +122,15 @@ export function TabsBar({
               </button>
             </div>
           ))}
+          <Button
+            variant="outline"
+            onClick={onOpenQueryEditor}
+            className="px-2 h-full"
+          >
+            <Plus className="h-2 w-2" strokeWidth={1} />
+          </Button>
         </div>
+
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </div>

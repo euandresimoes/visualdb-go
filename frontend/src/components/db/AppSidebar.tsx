@@ -15,15 +15,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AppSidebarProps {
   onTableSelect: (schema: string, table: string) => void;
-  onOpenQueryEditor: () => void;
   selectedTable?: { schema: string; table: string } | null;
 }
 
-export function AppSidebar({
-  onTableSelect,
-  onOpenQueryEditor,
-  selectedTable,
-}: AppSidebarProps) {
+export function AppSidebar({ onTableSelect, selectedTable }: AppSidebarProps) {
   const [schemas, setSchemas] = useState<string[]>([]);
   const [expandedSchemas, setExpandedSchemas] = useState<Set<string>>(
     new Set(["public"])
@@ -153,10 +148,10 @@ export function AppSidebar({
   return (
     <div
       ref={sidebarRef}
-      className="h-full flex flex-col bg-sidebar border-r border-sidebar-border relative"
+      className="h-full flex flex-col bg-sidebar relative"
       style={{
         width: `${sidebarWidth}px`,
-        minWidth: "272px",
+        minWidth: "292px",
         maxWidth: "512px",
       }}
     >
@@ -171,35 +166,16 @@ export function AppSidebar({
           MozUserSelect: "none",
         }}
       />
-      {/* Header */}
-      <div className="px-2 py-1 border-b border-sidebar-border flex items-center">
-        <img src="/logo.jpg" alt="" className="h-14 w-14 mr-1" />
-        <span className="font-bold text-[1.05rem] text-sidebar-foreground">
-          Holo Studio
-        </span>
-      </div>
-
-      {/* New Query Button */}
-      <div className="p-3 border-b border-sidebar-border">
-        <Button
-          variant="outline"
-          className="w-full justify-start gap-2 bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20"
-          onClick={onOpenQueryEditor}
-        >
-          <Terminal className="h-4 w-4" />
-          New Query
-        </Button>
-      </div>
 
       {/* Search */}
-      <div className="p-3 border-b border-sidebar-border">
+      <div className="pr-3 pl-3 mt-1">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search tables..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 h-8 bg-sidebar-accent/20 border-sidebar-border"
+            className="pl-8 h-10 bg-sidebar-accent/20 border-sidebar-border"
           />
         </div>
       </div>

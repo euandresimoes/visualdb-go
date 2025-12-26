@@ -5,6 +5,7 @@ import { DataTable } from "@/components/db/DataTable";
 import { QueryEditor } from "@/components/db/QueryEditor";
 import { TabItem, QueryResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { TopBar } from "@/components/db/TopBar";
 
 const Index = () => {
   const { toast } = useToast();
@@ -70,122 +71,132 @@ const Index = () => {
   );
 
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden">
-      {/* Sidebar */}
-      <AppSidebar
-        key={`sidebar-${schemaVersion}`}
-        onTableSelect={openTable}
-        onOpenQueryEditor={openQueryEditor}
-        selectedTable={
-          activeTab?.type === "table"
-            ? { schema: activeTab.schema, table: activeTab.table }
-            : null
-        }
-      />
+    <div className="flex flex-col h-screen w-full bg-background overflow-hidden">
+      <TopBar onOpenQueryEditor={openQueryEditor} />
 
-      {/* Main Content */}
-      <div className="flex-1 m-5 border border-border rounded-lg flex flex-col min-w-0">
-        {/* Tabs Bar */}
-        {tabs.length > 0 && (
-          <TabsBar
-            tabs={tabs}
-            activeTabId={activeTabId}
-            onTabSelect={setActiveTabId}
-            onTabClose={closeTab}
-            onTabsReorder={setTabs}
-          />
-        )}
+      <main className="w-full h-full flex overflow-hidden">
+        {/* Sidebar */}
+        <AppSidebar
+          key={`sidebar-${schemaVersion}`}
+          onTableSelect={openTable}
+          selectedTable={
+            activeTab?.type === "table"
+              ? { schema: activeTab.schema, table: activeTab.table }
+              : null
+          }
+        />
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-hidden">
-          {activeTab ? (
-            activeTab.type === "query" ? (
-              <QueryEditor
-                query={activeTab.query || ""}
-                result={activeTab.queryResult || null}
-                onQueryChange={(newQuery) => {
-                  setTabs((prev) =>
-                    prev.map((tab) =>
-                      tab.id === activeTabId ? { ...tab, query: newQuery } : tab
-                    )
-                  );
-                }}
-                onRun={async (query: string) => {
-                  if (!query.trim()) {
-                    toast({
-                      title: "Error",
-                      description: "Please enter a query to execute",
-                      variant: "destructive",
-                    });
-                    return null;
-                  }
+        {/* Main Content */}
+        <div className="flex-1 mb-5 mr-5 border border-border bg-primaryView rounded-2xl flex flex-col min-w-0">
+          {/* Tabs Bar */}
+          {tabs.length > 0 && (
+            <TabsBar
+              tabs={tabs}
+              onOpenQueryEditor={openQueryEditor}
+              activeTabId={activeTabId}
+              onTabSelect={setActiveTabId}
+              onTabClose={closeTab}
+              onTabsReorder={setTabs}
+            />
+          )}
 
-                  try {
-                    const response = await fetch("/api/query", {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({ query }),
-                    });
-
-                    const result = await response.json();
-
-                    // Update the tab with the new result
+          {/* Content Area */}
+          <div className="flex-1 overflow-hidden">
+            {activeTab ? (
+              activeTab.type === "query" ? (
+                <QueryEditor
+                  query={activeTab.query || ""}
+                  result={activeTab.queryResult || null}
+                  onQueryChange={(newQuery) => {
                     setTabs((prev) =>
                       prev.map((tab) =>
                         tab.id === activeTabId
-                          ? { ...tab, queryResult: result }
+                          ? { ...tab, query: newQuery }
                           : tab
                       )
                     );
-
-                    // Reload schemas if the query was successful
-                    if (result.status < 400) {
-                      reloadSchemas();
+                  }}
+                  onRun={async (query: string) => {
+                    if (!query.trim()) {
+                      toast({
+                        title: "Error",
+                        description: "Please enter a query to execute",
+                        variant: "destructive",
+                      });
+                      return null;
                     }
 
-                    return result;
-                  } catch (error) {
-                    console.error("Error executing query:", error);
-                    throw error;
-                  }
-                }}
-              />
+                    try {
+                      const response = await fetch("/api/query", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ query }),
+                      });
+
+                      const result = await response.json();
+
+                      // Update the tab with the new result
+                      setTabs((prev) =>
+                        prev.map((tab) =>
+                          tab.id === activeTabId
+                            ? { ...tab, queryResult: result }
+                            : tab
+                        )
+                      );
+
+                      // Reload schemas if the query was successful
+                      if (result.status < 400) {
+                        reloadSchemas();
+                      }
+
+                      return result;
+                    } catch (error) {
+                      console.error("Error executing query:", error);
+                      throw error;
+                    }
+                  }}
+                />
+              ) : (
+                <DataTable
+                  key={`${activeTab.schema}-${activeTab.table}`}
+                  schema={activeTab.schema}
+                  table={activeTab.table}
+                  onError={() => {
+                    // Remove a aba quando ocorre um erro
+                    setTabs((prev) =>
+                      prev.filter((tab) => tab.id !== activeTabId)
+                    );
+                    setActiveTabId((prev) =>
+                      prev === activeTabId ? null : prev
+                    );
+                  }}
+                />
+              )
             ) : (
-              <DataTable
-                key={`${activeTab.schema}-${activeTab.table}`}
-                schema={activeTab.schema}
-                table={activeTab.table}
-                onError={() => {
-                  // Remove a aba quando ocorre um erro
-                  setTabs((prev) =>
-                    prev.filter((tab) => tab.id !== activeTabId)
-                  );
-                  setActiveTabId((prev) =>
-                    prev === activeTabId ? null : prev
-                  );
-                }}
-              />
-            )
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center max-w-md">
-                <div className="w-32 h-32 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <img src="/logo.jpg" alt="Holo Studio Logo" />
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center max-w-md">
+                  <div className="w-32 h-32 mx-auto flex items-center justify-center">
+                    <img
+                      src="/logo.jpg"
+                      alt="Holo Studio Logo"
+                      className="rounded-2xl"
+                    />
+                  </div>
+                  <h2 className="text-xl font-semibold my-2">
+                    Welcome to Holo Studio
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
+                    Select a table from the sidebar to view and edit data, or
+                    create a new query.
+                  </p>
                 </div>
-                <h2 className="text-xl font-semibold mb-2">
-                  Welcome to Holo Studio
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Select a table from the sidebar to view and edit data, or
-                  create a new query.
-                </p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
